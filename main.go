@@ -34,6 +34,8 @@ func main() {
 		AllowHeaders: []string{"X-Header", "X-Z-Header"}, // Allow this one header for this resource
 	})
 
+    port := ":1234"
+    log.Printf("Listening on port %s", port)
+	log.Fatal(http.ListenAndServe(port, router))
 	//log.Fatal(http.ListenAndServeTLS(":1234", "MyCertificate.crt", "MyKey.key", router))
-	log.Fatal(http.ListenAndServe(":1234", router))
 }
