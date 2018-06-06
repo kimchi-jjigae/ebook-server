@@ -97,12 +97,16 @@ func hashedPathsDifference(a map[string]string, b map[string]string) (difference
     // O(n^2) but good enough for now
     difference = make(map[string]string)
     for hash_a, path_a := range a {
+        matchFound := false
         for hash_b, _ := range b {
             if hash_a == hash_b {
+                matchFound = true
                 break
             }
         }
-        difference[hash_a] = path_a
+        if !matchFound {
+            difference[hash_a] = path_a
+        }
     }
     return
 }
