@@ -28,6 +28,12 @@ var searchDirs []string = []string{
 
 var storageDir string = "/home/kim/e/store"
 
+func getEbook(ebookFilename string) (ebook []byte, err error) {
+    ebookPath := storageDir + "/" + ebookFilename
+    ebook, err = ioutil.ReadFile(ebookPath)
+    return ebook, err
+}
+
 func getEbooks() (ebooks []Ebook) {
     checkForNewBooks()
     ebookPaths := getEbookPaths([]string{storageDir})
@@ -37,7 +43,8 @@ func getEbooks() (ebooks []Ebook) {
         log.Printf("Sending book %s details", ebookPath)
         ebookDetails, err := getBookDetails(ebookPath)
         if err != nil {
-            log.Printf("error trying to open %s : %s 😱", ebookPath, err)
+            log.Printf("error trying to open %s : %s 😱", ebookPath)
+            log.Print(err)
         }
         ebooks = append(ebooks, ebookDetails)
     }
@@ -105,11 +112,11 @@ func hashEbooks(ebookPaths []string) (hashedPaths map[string]string) {
 	for _, path := range ebookPaths {
         ebookData, err := os.Open(path)
         if err != nil {
-            log.Fatal(err)
+            log.Print(err)
         }
         hash := md5.New()
         if _, err := io.Copy(hash, ebookData); err != nil {
-            log.Fatal(err)
+            log.Print(err)
         }
         hashString := fmt.Sprintf("%x", hash.Sum(nil))
         hashedPaths[hashString] = path
@@ -170,7 +177,7 @@ func getEbookPaths(dirs []string) (ebookPaths []string) {
         files, err := ioutil.ReadDir(dir)
         //log.Printf("Files found in dir %s: %s", dir, strings.Join(files, "; "))
         if err != nil {
-            log.Fatal(err)
+            log.Print(err)
         }
         for _, file := range files {
             filename := file.Name()
