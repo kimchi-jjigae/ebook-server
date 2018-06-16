@@ -4,6 +4,7 @@ import (
 	//"encoding/json"
     "crypto/md5"
     "fmt"
+    "github.com/n3integration/epub"
     "io"
     "io/ioutil"
     "log"
@@ -33,26 +34,50 @@ func getEbooks() (ebooks []Ebook) {
     log.Printf("Getting details from %d ebooks", len(ebookPaths))
 	for _, ebookPath := range ebookPaths {
         //grab author, title, rights, description, filename (not whole path!)
-        log.Printf("Blarp %s", ebookPath)
+        log.Printf("Sending book %s details", ebookPath)
+        ebookDetails, err := getBookDetails(ebookPath)
+        if err != nil {
+            log.Printf("error trying to open %s : %s 😱", ebookPath, err)
+        }
+        ebooks = append(ebooks, ebookDetails)
     }
     return
 }
 
-/*
-func getBookDetails(ebookPath string) (ebook Ebook) {
-    ebook.Filename = getFilename(ebookPath)
-    book, err := epub.Open(path)
+func getBookDetails(ebookPath string) (ebook Ebook, err error) {
+    openEpub, err := epub.Open(ebookPath)
     if err != nil {
-        return nil, err
+        return ebook, err
     }
-    defer book.Close()
+    metadata := openEpub.Opf.Metadata // .opf file contains the ebook's metadata
+    if len(metadata.Creator) > 0 {
+        ebook.Author = strings.TrimSpace(metadata.Creator[0].Data)
+    } else {
+        ebook.Author = "unknown author"
+    }
+    if len(metadata.Title) > 0 {
+        ebook.Title = strings.TrimSpace(metadata.Title[0].Data)
+    } else {
+        ebook.Title = "unknown title"
+    }
+    if len(metadata.Rights) > 0 {
+        ebook.Rights = strings.TrimSpace(metadata.Rights[0])
+    } else {
+        ebook.Rights = ""
+    }
+    if len(metadata.Description) > 0 {
+        ebook.Description = strings.TrimSpace(metadata.Description[0])
+    } else {
+        ebook.Description = ""
+    }
 
-    for _, epubFiles := range book.Files() {
-        // fill in the ebook struct
-    }
-    return
+    splitEbookPath := strings.Split(ebookPath, `/`)
+    ebook.Filename = splitEbookPath[len(splitEbookPath)-1]
+
+    defer openEpub.Close()
+
+    return ebook, nil
 }
-*/
 
 func checkForNewBooks() {
     log.Print("Checking for new ebooks...")
@@ -150,8 +175,8 @@ func getEbookPaths(dirs []string) (ebookPaths []string) {
         for _, file := range files {
             filename := file.Name()
             // would be better to check type in another way but this will do for now
+            // e.g. from wikipedia: "The first file in the archive must be the mimetype file. It must be unencrypted and uncompressed so that non-ZIP utilities can read the mimetype. The mimetype file must be an ASCII file that contains the string "application/epub+zip". This file provides a more reliable way for applications to identify the mimetype of the file than just the .epub extension."
             plopp := filename[len(filename)-5:]
-            //if filename[len(filename)-4:] == ".epub" {
             if plopp == ".epub" {
                 ebookPaths = append(ebookPaths, dir + "/" + filename)
             }

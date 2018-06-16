@@ -23,9 +23,8 @@ func postEbookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//ebook := EbooksResponse{toEbooks(d.ebooksData.Ebooks())}
-
-	//writeOKResponse(w, ebook)
+    ebook := EbooksResponse{getEbook()}
+	writeOKResponse(w, ebook)
 }
 
 func postEbooksHandler(w http.ResponseWriter, r *http.Request) {
