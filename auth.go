@@ -11,19 +11,15 @@ type passwordRequest struct {
 	Password string `json: "password"`
 }
 
-func checkPasswordRequest(r *http.Request) *errorResponse {
+func checkPasswordRequest(r *http.Request, correctPassword string) *errorResponse {
 	decoder := json.NewDecoder(r.Body)
 	var pw passwordRequest
 	err := decoder.Decode(&pw)
 	if err != nil {
 		return newErrorResponse(400, err.Error())
 	}
-	if !checkPassword(pw.Password) {
+	if pw.Password != correctPassword {
 		return newErrorResponse(401, "invalid password")
 	}
 	return nil
-}
-
-func checkPassword(password string) bool {
-	return password == "shittypassword"
 }

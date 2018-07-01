@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"encoding/json"
     "fmt"
 	"github.com/husobee/vestigo"
     "log"
@@ -11,23 +10,35 @@ import (
 
 // 🌸 rauting 🌸 //
 
-func RegisterRoutes(router *vestigo.Router) {
-	router.Get("/api/test", testHandler)
-	router.Post("/api/ebooks",  postEbooksHandler)
-	router.Post("/api/ebooks/", postEbooksHandler)
-	router.Post("/api/ebook/:filename",  postEbookHandler)
-	router.Post("/api/ebook/:filename/", postEbookHandler)
+type EbooksRouter struct {
+    config *Config
+    fileServer *EbooksFileServer
 }
 
-func postEbookHandler(w http.ResponseWriter, r *http.Request) {
-	errorResponse := checkPasswordRequest(r)
+func newEbooksRouter (config *Config) (newRouter *EbooksRouter) {
+    newRouter = &EbooksRouter{}
+    newRouter.config = config
+    newRouter.fileServer = newEbooksFileServer(config)
+    return
+}
+
+func (router *EbooksRouter) RegisterRoutes(vRouter *vestigo.Router) {
+	vRouter.Get("/api/test", router.testHandler)
+	vRouter.Post("/api/ebooks",  router.postEbooksHandler)
+	vRouter.Post("/api/ebooks/", router.postEbooksHandler)
+	vRouter.Post("/api/ebook/:filename",  router.postEbookHandler)
+	vRouter.Post("/api/ebook/:filename/", router.postEbookHandler)
+}
+
+func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Request) {
+	errorResponse := checkPasswordRequest(r, router.config.Password)
 	if errorResponse != nil {
         time.Sleep(3000 * time.Millisecond)
 		writeErrorResponse(w, errorResponse)
 		return
 	}
 	filename := vestigo.Param(r, "filename")
-    ebook, err := getEbook(filename)
+    ebook, err := router.fileServer.GetEbook(filename)
     if err != nil {
         log.Print(err)
         errorString := fmt.Sprintf("Error trying to open file %s", filename)
@@ -36,28 +47,28 @@ func postEbookHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    w.Write(ebook)
-
     attachmentString := "attachment; filename='" + filename + "'"
     w.Header().Set("Content-Disposition", attachmentString)
     w.Header().Set("Content-Type", "application/epub+zip")
 
+    w.Write(ebook)
+
 	writeOKResponse(w, ebook)
 }
 
-func postEbooksHandler(w http.ResponseWriter, r *http.Request) {
-	errorResponse := checkPasswordRequest(r)
+func (router *EbooksRouter) postEbooksHandler(w http.ResponseWriter, r *http.Request) {
+	errorResponse := checkPasswordRequest(r, router.config.Password)
 	if errorResponse != nil {
         time.Sleep(3000 * time.Millisecond)
 		writeErrorResponse(w, errorResponse)
 		return
 	}
 
-    ebooks := EbooksResponse{getEbooks()}
+    ebooks := EbooksResponse{router.fileServer.GetEbooks()}
 	writeOKResponse(w, ebooks)
 }
 
-func testHandler(w http.ResponseWriter, r *http.Request) {
+func (router *EbooksRouter) testHandler(w http.ResponseWriter, r *http.Request) {
 	testEbook := Ebook{
         Author: "Kim Plong",
         Title: "Good Book",

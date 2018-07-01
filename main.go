@@ -5,10 +5,26 @@ import (
 	"net/http"
 	"time"
 
+    "github.com/BurntSushi/toml"
 	"github.com/husobee/vestigo"
 )
 
+type Config struct {
+    Password string
+    SearchDirs []string
+    StorageDir string
+    Port string
+    Certificate string
+    Key string
+}
+
 func main() {
+    var config Config
+    if _, err := toml.DecodeFile("config.toml", &config); err != nil {
+        log.Fatalf("Misconfigured TOML config file!, %s", err)
+    }
+
+    ebooksRouter := newEbooksRouter(&config)
 	router := vestigo.NewRouter()
 	// you can enable trace by setting this to true
 	vestigo.AllowTrace = true
@@ -23,7 +39,7 @@ func main() {
 		AllowHeaders:     []string{"X-Header", "X-Y-Header"},
 	})
 
-	RegisterRoutes(router)
+	ebooksRouter.RegisterRoutes(router)
 
 	// Below Applies Local CORS capabilities per Resource (both methods covered)
 	// by default this will merge the "GlobalCors" settings with the resource
@@ -34,8 +50,7 @@ func main() {
 		AllowHeaders: []string{"X-Header", "X-Z-Header"}, // Allow this one header for this resource
 	})
 
-    port := ":1234"
-    log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(port, router))
-	//log.Fatal(http.ListenAndServeTLS(":1234", "MyCertificate.crt", "MyKey.key", router))
+    log.Printf("Listening on port %s", config.Port)
+	log.Fatal(http.ListenAndServe(config.Port, router))
+	//log.Fatal(http.ListenAndServeTLS(config.Port, config.Certificate, config.Key, router))
 }

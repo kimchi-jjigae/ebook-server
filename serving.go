@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"encoding/json"
     "crypto/md5"
     "fmt"
     "github.com/n3integration/epub"
@@ -22,26 +21,30 @@ type Ebook struct {
 	Filename    string `json:"filename"`
 }
 
-var searchDirs []string = []string{
-    "/home/kim/e/search",
+type EbooksFileServer struct {
+    config *Config
 }
 
-var storageDir string = "/home/kim/e/store"
+func newEbooksFileServer (config *Config) (newServer *EbooksFileServer) {
+    newServer = &EbooksFileServer{}
+    newServer.config = config
+    return
+}
 
-func getEbook(ebookFilename string) (ebook []byte, err error) {
-    ebookPath := storageDir + "/" + ebookFilename
+func (server *EbooksFileServer) GetEbook(ebookFilename string) (ebook []byte, err error) {
+    ebookPath := server.config.StorageDir + "/" + ebookFilename
     ebook, err = ioutil.ReadFile(ebookPath)
     return ebook, err
 }
 
-func getEbooks() (ebooks []Ebook) {
-    checkForNewBooks()
-    ebookPaths := getEbookPaths([]string{storageDir})
+func (server *EbooksFileServer) GetEbooks() (ebooks []Ebook) {
+    server.checkForNewBooks()
+    ebookPaths := server.getEbookPaths([]string{server.config.StorageDir})
     log.Printf("Getting details from %d ebooks", len(ebookPaths))
 	for _, ebookPath := range ebookPaths {
         //grab author, title, rights, description, filename (not whole path!)
         log.Printf("Sending book %s details", ebookPath)
-        ebookDetails, err := getBookDetails(ebookPath)
+        ebookDetails, err := server.getBookDetails(ebookPath)
         if err != nil {
             log.Printf("error trying to open %s : %s 😱", ebookPath)
             log.Print(err)
@@ -51,7 +54,7 @@ func getEbooks() (ebooks []Ebook) {
     return
 }
 
-func getBookDetails(ebookPath string) (ebook Ebook, err error) {
+func (server *EbooksFileServer) getBookDetails(ebookPath string) (ebook Ebook, err error) {
     openEpub, err := epub.Open(ebookPath)
     if err != nil {
         return ebook, err
@@ -86,27 +89,27 @@ func getBookDetails(ebookPath string) (ebook Ebook, err error) {
     return ebook, nil
 }
 
-func checkForNewBooks() {
+func (server *EbooksFileServer) checkForNewBooks() {
     log.Print("Checking for new ebooks...")
-    log.Printf("Searching in: %s", strings.Join(searchDirs, "; "))
-    ebookSearchPaths := getEbookPaths(searchDirs)
+    log.Printf("Searching in: %s", strings.Join(server.config.SearchDirs, "; "))
+    ebookSearchPaths := server.getEbookPaths(server.config.SearchDirs)
     log.Printf("Ebooks from search path: %s", strings.Join(ebookSearchPaths, "; "))
-    ebookStoragePaths := getEbookPaths([]string{storageDir})
+    ebookStoragePaths := server.getEbookPaths([]string{server.config.StorageDir})
     log.Print("Hashing ebooks for comparison...")
-    hashedSearchEbooks := hashEbooks(ebookSearchPaths)
-    hashedStorageEbooks := hashEbooks(ebookStoragePaths)
+    hashedSearchEbooks := server.hashEbooks(ebookSearchPaths)
+    hashedStorageEbooks := server.hashEbooks(ebookStoragePaths)
     log.Print("Comparing hashes...")
     // find hashes unique in the search path only
-    searchEbooksUnique := hashedPathsDifference(hashedSearchEbooks, hashedStorageEbooks)
+    searchEbooksUnique := server.hashedPathsDifference(hashedSearchEbooks, hashedStorageEbooks)
     if len(searchEbooksUnique) > 0 {
-        copyEbooks(searchEbooksUnique, storageDir)
+        server.copyEbooks(searchEbooksUnique, server.config.StorageDir)
         log.Print("...finished copying.")
     } else {
         log.Print("...no new ebooks found.")
     }
 }
 
-func hashEbooks(ebookPaths []string) (hashedPaths map[string]string) {
+func (server *EbooksFileServer) hashEbooks(ebookPaths []string) (hashedPaths map[string]string) {
     // hash all the ebooks at the given paths
     hashedPaths = make(map[string]string)
 	for _, path := range ebookPaths {
@@ -124,7 +127,7 @@ func hashEbooks(ebookPaths []string) (hashedPaths map[string]string) {
     return
 }
 
-func hashedPathsDifference(a map[string]string, b map[string]string) (difference map[string]string) {
+func (server *EbooksFileServer) hashedPathsDifference(a map[string]string, b map[string]string) (difference map[string]string) {
     // returns a - b (i.e. what's in a but not in b)
     // O(n^2) but good enough for now
     difference = make(map[string]string)
@@ -143,20 +146,20 @@ func hashedPathsDifference(a map[string]string, b map[string]string) (difference
     return
 }
 
-func copyEbooks(searchEbooksUnique map[string]string, storageDir string) {
+func (server *EbooksFileServer) copyEbooks(searchEbooksUnique map[string]string, StorageDir string) {
     log.Printf("Found %d new ebooks!", len(searchEbooksUnique))
     for _, path := range searchEbooksUnique {
-        filename := generateNewFilename()
-        log.Printf("Copying %s to %s/%s", path, storageDir, filename)
-        Copy(path, storageDir + "/" + filename)
-        //err := Copy(path, storageDir + "/" + filename)
+        filename := server.generateNewFilename()
+        log.Printf("Copying %s to %s/%s", path, StorageDir, filename)
+        server.Copy(path, StorageDir + "/" + filename)
+        //err := server.Copy(path, StorageDir + "/" + filename)
         // do something with err I guess
     }
 }
 
-func generateNewFilename() string {
+func (server *EbooksFileServer) generateNewFilename() string {
     // generate new filename of format `e00001.epub`
-    ebookPaths := getEbookPaths([]string{storageDir})
+    ebookPaths := server.getEbookPaths([]string{server.config.StorageDir})
     highestNum := 0
 	ebookRe, _ := regexp.Compile(`^[\w/]+([\d]{6})\.epub$`)
     for _, ebookPath := range ebookPaths {
@@ -171,7 +174,7 @@ func generateNewFilename() string {
     return fmt.Sprintf("e%06d.epub", highestNum + 1)
 }
 
-func getEbookPaths(dirs []string) (ebookPaths []string) {
+func (server *EbooksFileServer) getEbookPaths(dirs []string) (ebookPaths []string) {
     // grab all the .epub paths in the storage dir
 	for _, dir := range dirs {
         files, err := ioutil.ReadDir(dir)
@@ -195,7 +198,7 @@ func getEbookPaths(dirs []string) (ebookPaths []string) {
 // https://stackoverflow.com/a/21061062
 // Copy the src file to dst. Any existing file will be overwritten and will not
 // copy file attributes.
-func Copy(src, dst string) error {
+func (server *EbooksFileServer) Copy(src, dst string) error {
     in, err := os.Open(src)
     if err != nil {
         return err
