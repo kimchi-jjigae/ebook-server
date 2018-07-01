@@ -1,10 +1,10 @@
 package main
 
 import (
-    "fmt"
 	"github.com/husobee/vestigo"
-    "log"
 	"net/http"
+    "fmt"
+    "log"
     "time"
 )
 

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+    "log"
 )
 
 // passwörd stuff //
@@ -19,7 +20,9 @@ func checkPasswordRequest(r *http.Request, correctPassword string) *errorRespons
 		return newErrorResponse(400, err.Error())
 	}
 	if pw.Password != correctPassword {
+        log.Print("Invalid password attempt!")
 		return newErrorResponse(401, "invalid password")
 	}
+    log.Print("Successful password input!")
 	return nil
 }
