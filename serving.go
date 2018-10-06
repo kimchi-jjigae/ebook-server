@@ -161,7 +161,7 @@ func (server *EbooksFileServer) generateNewFilename() string {
     // generate new filename of format `e00001.epub`
     ebookPaths := server.getEbookPaths([]string{server.config.StorageDir})
     highestNum := 0
-	ebookRe, _ := regexp.Compile(`^[\w/]+([\d]{6})\.epub$`)
+	ebookRe, _ := regexp.Compile(`^.*\/+e([\d]{6})\.epub$`)
     for _, ebookPath := range ebookPaths {
         reMatch := ebookRe.FindStringSubmatch(ebookPath)
         if len(reMatch) > 0 {
