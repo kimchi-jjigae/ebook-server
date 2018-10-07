@@ -31,7 +31,8 @@ func (router *EbooksRouter) RegisterRoutes(vRouter *vestigo.Router) {
 }
 
 func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Request) {
-	errorResponse := checkPasswordRequest(r, router.config.Password)
+    pw := r.Header.Get("x-password")
+	errorResponse := checkPasswordRequest(pw, router.config.Password)
 	if errorResponse != nil {
         time.Sleep(3000 * time.Millisecond)
 		writeErrorResponse(w, errorResponse)
@@ -57,7 +58,8 @@ func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (router *EbooksRouter) postEbooksHandler(w http.ResponseWriter, r *http.Request) {
-	errorResponse := checkPasswordRequest(r, router.config.Password)
+    pw := r.Header.Get("x-password")
+	errorResponse := checkPasswordRequest(pw, router.config.Password)
 	if errorResponse != nil {
         time.Sleep(3000 * time.Millisecond)
 		writeErrorResponse(w, errorResponse)
