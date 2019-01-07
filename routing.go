@@ -43,6 +43,7 @@ func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	filename := vestigo.Param(r, "filename")
+    log.Print(filename)
     filepath, err := router.fileServer.GetTempEbookFilepath(filename)
     if err != nil {
         log.Print(err)
@@ -52,6 +53,7 @@ func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Requ
         return
     }
     fileURL := convertTempFilepathToURL(filepath)
+    go router.fileServer.RemoveTempEbook(filepath)
 	writeOKResponse(w, fileURL)
 }
 

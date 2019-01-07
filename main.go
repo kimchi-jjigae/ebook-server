@@ -13,6 +13,7 @@ type Config struct {
     Password string
     SearchDirs []string
     StorageDir string
+    TempDir string
     Port string
     Certificate string
     Key string

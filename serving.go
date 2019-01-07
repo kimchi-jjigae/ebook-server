@@ -7,9 +7,11 @@ import (
     "io"
     "io/ioutil"
     "log"
+    "math/rand"
     "regexp"
     "strconv"
     "strings"
+    "time"
     "os"
 )
 
@@ -31,8 +33,36 @@ func newEbooksFileServer (config *Config) (newServer *EbooksFileServer) {
     return
 }
 
-func (server *EbooksFileServer) GetTempEbookFilepath(filename string) (filepath string, err error) {
+func (server *EbooksFileServer) RemoveTempEbook(filename string) (err error) {
+    log.Print("Good night for the next minute ^_^")
+    time.Sleep(60000000000)
+    log.Print("Hello again!")
+    return nil
+}
+
+// hallo runer som sitter härutanför
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func generateRandomFilename() (filename string) {
+    rand.Seed(time.Now().UnixNano())
+
+    randomLetters := make([]rune, 7)
+    for i := range randomLetters {
+        randomLetters[i] = letterRunes[rand.Intn(len(letterRunes))]
+    }
+    return string(randomLetters)
+}
+
+func (server *EbooksFileServer) copyToTemporaryFilepath(filename string) (filepath string, err error) {
+    newFilename := generateRandomFilename()
+    filename = server.config.TempDir + "/" + newFilename
+    //filepath, err = copyToTemporaryFilepath(filename)
     return filename, nil
+}
+
+func (server *EbooksFileServer) GetTempEbookFilepath(filename string) (filepath string, err error) {
+    filepath, err = server.copyToTemporaryFilepath(filename)
+    return
 }
 
 func (server *EbooksFileServer) GetEbook(ebookFilename string) (ebook []byte, err error) {
