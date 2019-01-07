@@ -31,6 +31,10 @@ func newEbooksFileServer (config *Config) (newServer *EbooksFileServer) {
     return
 }
 
+func (server *EbooksFileServer) GetTempEbookFilepath(filename string) (filepath string, err error) {
+    return filename, nil
+}
+
 func (server *EbooksFileServer) GetEbook(ebookFilename string) (ebook []byte, err error) {
     ebookPath := server.config.StorageDir + "/" + ebookFilename
     ebook, err = ioutil.ReadFile(ebookPath)
