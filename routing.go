@@ -31,6 +31,8 @@ func (router *EbooksRouter) RegisterRoutes(vRouter *vestigo.Router) {
 }
 
 func convertTempFilepathToURL(filepath string) (fileURL string) {
+    // for now this is at the exact same path as the client file serving,
+    // so there's no need to append an extra path onto it :)
     return filepath
 }
 

@@ -8,6 +8,7 @@ import (
     "io/ioutil"
     "log"
     "math/rand"
+    "path"
     "regexp"
     "strconv"
     "strings"
@@ -34,13 +35,22 @@ func newEbooksFileServer (config *Config) (newServer *EbooksFileServer) {
 }
 
 func (server *EbooksFileServer) RemoveTempEbook(filename string) (err error) {
-    log.Print("Good night for the next minute ^_^")
-    time.Sleep(60000000000)
-    log.Print("Hello again!")
+    timeout_ns := time.Duration(60000000000)
+    log.Printf("Timing out for %s seconds to allow file download", timeout_ns / 1000000000)
+    time.Sleep(timeout_ns)
+    filepath := path.Join(server.config.TempDir, filename)
+    log.Printf("Will now delete file %s", filepath)
+    err = os.Remove(filepath)
+    if err != nil {
+        log.Printf("Could not delete file at %s!", filepath)
+        log.Print(err)
+        return err
+    }
+    log.Print("Done!")
     return nil
 }
 
-// hallo runer som sitter härutanför
+// hallo ni runer som sitter härutanför
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func generateRandomFilename() (filename string) {
@@ -50,14 +60,19 @@ func generateRandomFilename() (filename string) {
     for i := range randomLetters {
         randomLetters[i] = letterRunes[rand.Intn(len(letterRunes))]
     }
-    return string(randomLetters)
+    return string(randomLetters) + ".epub"
 }
 
-func (server *EbooksFileServer) copyToTemporaryFilepath(filename string) (filepath string, err error) {
-    newFilename := generateRandomFilename()
-    filename = server.config.TempDir + "/" + newFilename
-    //filepath, err = copyToTemporaryFilepath(filename)
-    return filename, nil
+func (server *EbooksFileServer) copyToTemporaryFilepath(filename string) (newFilename string, err error) {
+    newFilename = generateRandomFilename()
+    destFilepath := path.Join(server.config.TempDir, newFilename)
+    srcFilepath := path.Join(server.config.StorageDir, filename)
+    err = server.Copy(srcFilepath, destFilepath)
+    if err != nil {
+        log.Printf("Could not copy book from '%s' to temp filepath '%s'!", srcFilepath, destFilepath)
+        return
+    }
+    return
 }
 
 func (server *EbooksFileServer) GetTempEbookFilepath(filename string) (filepath string, err error) {
