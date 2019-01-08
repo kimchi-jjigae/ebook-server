@@ -59,35 +59,6 @@ func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Requ
 	writeOKResponse(w, fileURL)
 }
 
-/*
-func (router *EbooksRouter) postEbookHandler(w http.ResponseWriter, r *http.Request) {
-    pw := r.Header.Get("x-password")
-	errorResponse := checkPasswordRequest(pw, router.config.Password)
-    if errorResponse != nil {
-        time.Sleep(3000 * time.Millisecond)
-		writeErrorResponse(w, errorResponse)
-		return
-	}
-	filename := vestigo.Param(r, "filename")
-    ebook, err := router.fileServer.GetEbook(filename)
-    if err != nil {
-        log.Print(err)
-        errorString := fmt.Sprintf("Error trying to open file %s", filename)
-		errorResponse := newErrorResponse(500, errorString)
-        writeErrorResponse(w, errorResponse)
-        return
-    }
-
-    attachmentString := "attachment; filename='" + filename + "'"
-    w.Header().Set("Content-Disposition", attachmentString)
-    w.Header().Set("Content-Type", "application/epub+zip")
-
-    w.Write(ebook)
-
-	writeOKResponse(w, ebook)
-}
-*/
-
 func (router *EbooksRouter) postEbooksHandler(w http.ResponseWriter, r *http.Request) {
     pw := r.Header.Get("x-password")
 	errorResponse := checkPasswordRequest(pw, router.config.Password)
