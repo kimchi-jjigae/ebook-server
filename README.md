@@ -22,5 +22,5 @@ The password should be sent to the server through an `x-password` header. I real
 
 ## Some config before building:
 - If you don't want to use HTTPS: uncomment `http.ListenAndServe` and comment `http.ListenAndServeTLS` in `main.go`
-- Edit the `config.toml` file as necessary (remove `Certificate` and `Key` if not using HTTPS
+- Edit the `config.toml` file as necessary (remove `Certificate` and `Key` if not using HTTPS)
 - Place the `config.toml` file in the dir you run the executable from
