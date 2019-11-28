@@ -19,3 +19,8 @@ This isn't ideal since the temporary URL is publicly accessible. Originally I ha
 
 I haven't added any front-end code in this repo but I may do at a later date in the future!
 The password should be sent to the server through an `x-password` header. I realise now that there are [built in basic HTTP frameworks for this](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication), but this works at least :)
+
+## Some config before building:
+- If you don't want to use HTTPS: uncomment `http.ListenAndServe` and comment `http.ListenAndServeTLS` in `main.go`
+- Edit the `config.toml` file as necessary (remove `Certificate` and `Key` if not using HTTPS
+- Place the `config.toml` file in the dir you run the executable from

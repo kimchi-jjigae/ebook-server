@@ -1,0 +1,8 @@
+Password = "y0urV3ryStr0ngP4ssw0rd"
+SearchDirs = ["/dirs/with/ebooks/that", "/will/be/searched/through"]
+StorageDir = "/where/all/ebooks/will/be/copied/to"
+TempDir = "/public/web/facing/dir/for/serving/ebooks"
+AllowOriginFrom = ["https://your.server.com"]
+Port = ":1337"
+Certificate = "cert.pem"
+Key = "key.pem"
