@@ -34,7 +34,7 @@ func main() {
 	// Setting up router global CORS policy
 	// These policy guidelines are overriddable at a per resource level shown below
 	router.SetGlobalCors(&vestigo.CorsAccessControl{
-		AllowOrigin:      config.AllowOriginFrom
+		AllowOrigin:      config.AllowOriginFrom,
 		AllowCredentials: true,
 		MaxAge:           3600 * time.Second,
 		AllowHeaders:     []string{"x-password", "content-type"},
